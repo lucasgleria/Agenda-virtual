@@ -1,0 +1,3 @@
+tkcalendar
+psycopg2-binary
+plyer
