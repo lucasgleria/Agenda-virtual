@@ -1,3 +1,9 @@
 implementacao-readmes/*
 model/db/test_repository.py
 model/db/test_connection.py
+controller/__pycache__/*
+model/__pycache__/*
+services/__pycache__/*
+view/__pycache__/*
+view/components/__pycache__/*
+model/db/__pycache__/*
