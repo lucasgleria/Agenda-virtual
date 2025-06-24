@@ -1,6 +1,7 @@
 from plyer import notification
 import threading
 import time
+from datetime import datetime
 
 def send_notification(title, message):
     """
@@ -37,10 +38,25 @@ class NotificationScheduler:
             for schedule in schedules:
                 task_id, description, nome, date = schedule
                 if task_id not in self.notified_ids:
-                    title = f"Lembrete: {nome or description}"
-                    message = f"Você tem um agendamento para amanhã ({date.strftime('%d/%m')}): {description}."
-                    send_notification(title, message)
-                    self.notified_ids.add(task_id)
+                    # Calcula o tempo restante
+                    now = datetime.now()
+                    schedule_datetime = datetime.combine(date, datetime.min.time())  # Assume início do dia
+                    time_diff = schedule_datetime - now
+                    
+                    if time_diff.total_seconds() > 0:  # Só notifica se ainda não passou
+                        hours_remaining = int(time_diff.total_seconds() // 3600)
+                        
+                        if hours_remaining < 24:
+                            title = f"Lembrete: {nome or description}"
+                            if hours_remaining < 1:
+                                message = f"Você tem um agendamento em menos de 1 hora: {description}"
+                            elif hours_remaining == 1:
+                                message = f"Você tem um agendamento em 1 hora: {description}"
+                            else:
+                                message = f"Você tem um agendamento em {hours_remaining} horas ({date.strftime('%d/%m')}): {description}"
+                            
+                            send_notification(title, message)
+                            self.notified_ids.add(task_id)
         except Exception as e:
             print(f"Erro no agendador de notificações: {e}")
         

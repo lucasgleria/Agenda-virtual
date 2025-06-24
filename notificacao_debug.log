@@ -1,0 +1,181 @@
+2025-06-21 09:12:35,095 INFO:Agendador de notificações iniciado.
+2025-06-21 09:12:35,097 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:12:35,109 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:12:35,109 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:12:35,145 INFO:Notificação enviada: 'Lembrete: Reunião Cliente ABC' - 'Você tem um agendamento para amanhã (22/06): Reunião importante com cliente.'
+2025-06-21 09:12:35,146 INFO:ID 95 notificado e adicionado ao set notified_ids.
+2025-06-21 09:12:35,154 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:12:45,167 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:12:45,167 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:12:45,167 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:12:45,168 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:12:45,168 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:12:55,172 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:12:55,175 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:12:55,175 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:12:55,175 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:12:55,175 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:13:01,725 INFO:Agendador de notificações parado.
+2025-06-21 09:14:18,718 INFO:Agendador de notificações iniciado.
+2025-06-21 09:14:18,720 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:14:18,728 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:14:18,728 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:14:18,763 INFO:Notificação enviada: 'Lembrete: Reunião Cliente ABC' - 'Você tem um agendamento para amanhã (22/06): Reunião importante com cliente.'
+2025-06-21 09:14:18,764 INFO:ID 95 notificado e adicionado ao set notified_ids.
+2025-06-21 09:14:18,764 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:14:28,768 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:14:28,770 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:14:28,770 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:14:28,770 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:14:28,770 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:14:38,776 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:14:38,779 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22))]
+2025-06-21 09:14:38,780 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:14:38,780 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:14:38,781 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:14:48,790 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:14:48,793 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:14:48,793 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:14:48,793 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:14:48,794 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:14:48,804 INFO:Notificação enviada: 'Lembrete: Commitment' - 'Você tem um agendamento para amanhã (22/06): Commitment.'
+2025-06-21 09:14:48,804 INFO:ID 96 notificado e adicionado ao set notified_ids.
+2025-06-21 09:14:48,805 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:14:58,819 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:14:58,821 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:14:58,821 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:14:58,821 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:14:58,821 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:14:58,821 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:14:58,822 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:15:08,827 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:15:08,829 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:15:08,830 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:15:08,830 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:15:08,830 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:15:08,830 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:15:08,832 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:15:18,837 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:15:18,838 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:15:18,838 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:15:18,838 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:15:18,838 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:15:18,838 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:15:18,839 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:15:28,849 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:15:28,867 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:15:28,867 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:15:28,868 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:15:28,868 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:15:28,868 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:15:28,870 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:15:38,882 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:15:38,887 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:15:38,887 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:15:38,887 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:15:38,887 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:15:38,887 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:15:38,888 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:15:41,285 INFO:Agendador de notificações parado.
+2025-06-21 09:16:30,458 INFO:Agendador de notificações iniciado.
+2025-06-21 09:16:30,459 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:16:30,479 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:16:30,479 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:16:30,577 INFO:Notificação enviada: 'Lembrete: Reunião Cliente ABC' - 'Você tem um agendamento para amanhã (22/06): Reunião importante com cliente.'
+2025-06-21 09:16:30,578 INFO:ID 95 notificado e adicionado ao set notified_ids.
+2025-06-21 09:16:30,579 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:16:30,597 INFO:Notificação enviada: 'Lembrete: Commitment' - 'Você tem um agendamento para amanhã (22/06): Commitment.'
+2025-06-21 09:16:30,597 INFO:ID 96 notificado e adicionado ao set notified_ids.
+2025-06-21 09:16:30,641 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:16:40,649 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:16:40,654 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:16:40,655 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:16:40,656 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:16:40,656 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:16:40,657 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:16:40,657 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:16:50,677 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:16:50,683 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:16:50,685 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:16:50,688 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:16:50,690 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:16:50,690 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:16:50,692 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:00,707 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:00,708 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:00,709 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:00,709 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:00,709 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:00,709 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:00,709 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:10,718 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:10,719 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:10,719 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:10,719 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:10,719 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:10,719 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:10,720 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:20,727 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:20,727 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:20,728 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:20,728 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:20,728 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:20,728 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:20,728 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:30,742 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:30,752 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:30,752 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:30,752 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:30,753 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:30,753 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:30,754 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:40,796 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:40,797 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:40,797 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:40,797 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:40,797 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:40,799 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:40,885 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:17:50,932 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:17:50,937 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:17:50,938 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:17:50,939 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:17:50,939 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:17:50,939 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:17:50,940 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:00,955 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:18:00,958 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:18:00,958 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:18:00,958 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:18:00,958 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:18:00,958 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:18:00,959 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:10,972 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:18:10,978 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:18:10,978 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:18:10,979 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:18:10,979 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:18:10,979 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:18:10,980 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:21,006 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:18:21,013 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:18:21,015 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:18:21,016 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:18:21,018 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:18:21,020 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:18:21,022 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:31,040 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:18:31,050 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:18:31,051 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:18:31,052 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:18:31,053 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:18:31,054 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:18:31,057 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:41,067 INFO:Scheduler: Verificando agendamentos...
+2025-06-21 09:18:41,076 INFO:Agendamentos retornados: [(95, 'Reunião importante com cliente', 'Reunião Cliente ABC', datetime.date(2025, 6, 22)), (96, 'Commitment', None, datetime.date(2025, 6, 22))]
+2025-06-21 09:18:41,077 INFO:Verificando agendamento ID 95 - Reunião Cliente ABC para 2025-06-22
+2025-06-21 09:18:41,077 INFO:ID 95 já notificado nesta sessão.
+2025-06-21 09:18:41,077 INFO:Verificando agendamento ID 96 - Commitment para 2025-06-22
+2025-06-21 09:18:41,077 INFO:ID 96 já notificado nesta sessão.
+2025-06-21 09:18:41,078 INFO:Scheduler reagendado para rodar em 10 segundos.
+2025-06-21 09:18:42,206 INFO:Agendador de notificações parado.

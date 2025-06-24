@@ -11,9 +11,13 @@ class AgendaController:
         self.repository = repository
         self.view = view
         self.active_filters = {}
-        self.view.set_controller(self)
+        if self.view is not None:
+            self.view.set_controller(self)
 
     def add_task(self, date, description, priority, nome=None, is_agendamento=False, is_evento=False, dias_evento=None):
+        # Determinar se é uma tarefa baseado nos outros campos
+        is_tarefa = not (is_agendamento or is_evento)
+        
         task_data = {
             'date': date,
             'description': description,
@@ -21,6 +25,7 @@ class AgendaController:
             'nome': nome,
             'is_agendamento': is_agendamento,
             'is_evento': is_evento,
+            'is_tarefa': is_tarefa,
             'dias_evento': dias_evento
         }
         self.repository.add_task(task_data)
@@ -61,7 +66,28 @@ class AgendaController:
             
         return [self._db_to_task(t) for t in tasks_db]
     
-    def get_eventos_ativos(self):
+    def get_tarefas_for_date(self, date):
+        """Retornar apenas tarefas (não eventos, não agendamentos) para uma data."""
+        tasks_db = self.repository.get_tarefas_by_date(date)
+        return [self._db_to_task(t) for t in tasks_db]
+    
+    def get_agendamentos_for_date(self, date):
+        """Retornar apenas agendamentos (não eventos, não tarefas) para uma data."""
+        tasks_db = self.repository.get_agendamentos_by_date(date)
+        return [self._db_to_task(t) for t in tasks_db]
+    
+    def get_event_tasks_for_date(self, date):
+        """Retornar apenas TAREFAS de eventos (não agendamentos, não tarefas) para uma data."""
+        tasks_db = self.repository.get_eventos_by_date(date)
+        return [self._db_to_task(t) for t in tasks_db]
+
+    def get_tasks(self):
+        """Retornar todas as tarefas do banco de dados"""
+        tasks_db = self.repository.get_all_tasks()
+        return [self._db_to_task(t) for t in tasks_db]
+
+    def get_all_active_events(self):
+        """Retornar todos os objetos Evento que estão ativos."""
         eventos_db = self.repository.get_eventos_ativos()
         return [self._db_to_evento(e) for e in eventos_db]
 
@@ -70,20 +96,44 @@ class AgendaController:
         return self.repository.get_upcoming_appointments()
 
     def encerrar_evento(self, evento):
-        self.repository.deactivate_evento(evento.id)
-        # Limpar tarefas futuras associadas a esse evento
-        self.repository.delete_future_event_tasks(evento.id, datetime.today().date())
+        """Encerrar um evento (desativar e limpar tarefas futuras)."""
+        try:
+            self.repository.deactivate_evento(evento.id)
+            # Limpar tarefas futuras associadas a esse evento
+            self.repository.delete_future_event_tasks(evento.id, datetime.today().date())
+            
+            # Atualizar a view
+            if self.view is not None:
+                self.view.update_view()
+                
+        except Exception as e:
+            if self.view is not None:
+                messagebox.showerror("Erro", f"Erro ao encerrar evento: {str(e)}")
+            raise e
 
     def delete_task(self, date, task):
-        if messagebox.askyesno("Confirmar exclusão", f"Excluir '{task.description}'?"):
+        if self.view is not None:
+            if messagebox.askyesno("Confirmar exclusão", f"Excluir '{task.description}'?"):
+                self.repository.delete_task_by_content(date, task.description, task.nome)
+        else:
+            # Em modo teste, apenas exclui sem confirmação
             self.repository.delete_task_by_content(date, task.description, task.nome)
 
     def edit_task(self, date, task):
         task_id = self.repository.find_task_id(date, task.description, task.nome)
         if not task_id:
-            messagebox.showerror("Erro", "Não foi possível encontrar a tarefa para editar.")
+            if self.view is not None:
+                messagebox.showerror("Erro", "Não foi possível encontrar a tarefa para editar.")
             return
-
+        if self.view is None:
+            # Em modo teste, apenas executa update direto
+            updated_task_data = {
+                'description': task.description,
+                'priority': task.priority.value if task.priority else None,
+                'nome': task.nome
+            }
+            self.repository.update_task(task_id, updated_task_data)
+            return
         # Popup de edição
         edit_window = Toplevel(self.view.root)
         edit_window.title("Editar Tarefa")
@@ -131,15 +181,9 @@ class AgendaController:
         ttk.Button(edit_window, text="Salvar", command=salvar).pack(pady=10)
 
     def handle_apply_filters(self, filters):
-        # O filtro de 'nome' (texto livre) deve buscar em todo o sistema,
-        # ignorando a data selecionada no calendário.
-        # Os outros filtros (status, tipo) podem ser combinados.
-        
-        # Armazena os filtros para serem usados em get_tasks_for_date
         self.active_filters = filters
-        
-        # Atualiza a view para refletir os resultados filtrados
-        self.view.update_view()
+        if self.view is not None:
+            self.view.update_view()
 
     def handle_export_data(self):
         data = self.repository.get_all_data()
@@ -169,12 +213,19 @@ class AgendaController:
         # Converte tupla do DB para objeto Task
         # Colunas: 0=id, 1=description, 2=priority, 3=nome, 4=is_agendamento, 5=is_evento, 6=dias_evento, 7=date, 8=status
         priority = PriorityFlag(db_row[2]) if db_row[2] else None
+        
+        # Determinar se é uma tarefa baseado nos outros campos
+        is_agendamento = db_row[4]
+        is_evento = db_row[5]
+        is_tarefa = not (is_agendamento or is_evento)
+        
         task = Task(
             description=db_row[1],
             priority=priority,
             nome=db_row[3],
-            is_agendamento=db_row[4],
-            is_evento=db_row[5],
+            is_agendamento=is_agendamento,
+            is_evento=is_evento,
+            is_tarefa=is_tarefa,
             dias_evento=db_row[6],
             status=db_row[8]
         )
@@ -193,12 +244,106 @@ class AgendaController:
         date, description, nome = task_key
         status = 'concluída' if done else 'pendente'
         
+        print(f"[DEBUG] Controller: update_task_status chamado")
+        print(f"[DEBUG] Controller: date={date}, description={description}, nome={nome}")
+        print(f"[DEBUG] Controller: status={status}")
+        
         # Como a view não conhece o ID, precisamos buscá-lo.
-        # Em um sistema real, a view deveria receber e guardar o ID.
         task_id = self.repository.find_task_id(date, description, nome)
+        print(f"[DEBUG] Controller: task_id encontrado={task_id}")
+        
         if task_id:
             self.repository.update_task_status(task_id, status)
+            print(f"[DEBUG] Controller: Status atualizado no repository")
+            if self.view is not None:
+                self.view.update_view()
+                print(f"[DEBUG] Controller: View atualizada")
         else:
-            # Em um caso real, seria bom logar ou mostrar um erro.
-            print(f"Alerta: Tarefa '{description}' não encontrada para a data {date} para atualizar status.")
+            print(f"[DEBUG] Controller: Tarefa não encontrada no banco!")
+
+    def update_task(self, task, original_task=None):
+        """Atualizar uma tarefa existente."""
+        # Se não foi fornecida a tarefa original, usar a atual (para compatibilidade)
+        if original_task is None:
+            original_task = task
+        
+        # Encontrar o ID da tarefa usando os dados originais
+        task_id = self.repository.find_task_id(original_task.date, original_task.description, original_task.nome)
+        
+        if not task_id:
+            if self.view is not None:
+                messagebox.showerror("Erro", "Não foi possível encontrar a tarefa para editar.")
+            return
+        
+        # Preparar dados para atualização
+        updated_task_data = {
+            'description': task.description,
+            'priority': task.priority.value if task.priority else None,
+            'nome': task.nome
+        }
+        
+        # Atualizar no repository
+        self.repository.update_task(task_id, updated_task_data)
+        
+        # Atualizar a view
+        if self.view is not None:
+            self.view.update_view()
+
+    def update_event(self, evento, original_evento=None):
+        """Atualizar um evento existente."""
+        # Se não foi fornecido o evento original, usar o atual (para compatibilidade)
+        if original_evento is None:
+            original_evento = evento
+        
+        # Verificar se o evento tem ID
+        evento_id = original_evento.id if hasattr(original_evento, 'id') and original_evento.id else None
+        
+        if not evento_id:
+            if self.view is not None:
+                messagebox.showerror("Erro", "Evento não possui ID válido para edição.")
+            return
+        
+        try:
+            # 1. Atualizar o evento na tabela de eventos
+            evento_data = {
+                'description': evento.description,
+                'nome': evento.nome,
+                'dias_semana': evento.dias_semana
+            }
+            self.repository.update_event(evento_id, evento_data)
+            
+            # 2. Deletar todas as tarefas futuras associadas a este evento
+            self.repository.delete_future_event_tasks(evento_id, datetime.today().date())
+            
+            # 3. Recriar as tarefas futuras com os novos dados do evento
+            self.gerar_tarefas_evento(evento)
+            
+            # 4. Atualizar a view
+            if self.view is not None:
+                self.view.update_view()
+                
+        except Exception as e:
+            if self.view is not None:
+                messagebox.showerror("Erro", f"Erro ao atualizar evento: {str(e)}")
+            raise e
+
+    def update_agendamento(self, agendamento, original_agendamento=None):
+        """Atualizar um agendamento existente."""
+        # Para agendamentos, tratamos como uma tarefa normal
+        self.update_task(agendamento, original_agendamento)
+
+    def delete_event(self, event_id):
+        self.repository.delete_event(event_id)
+        if self.view is not None:
+            self.view.update_view()
+
+    def delete_agendamento(self, agendamento):
+        """Deletar um agendamento."""
+        # Para agendamentos, tratamos como uma tarefa normal
+        self.delete_task(agendamento.date, agendamento)
+
+    def get_eventos_ativos_for_global_editor(self):
+        """Retornar eventos ativos (objetos Evento) para o painel global."""
+        eventos_db = self.repository.get_eventos_ativos()
+        return [self._db_to_evento(e) for e in eventos_db]
 

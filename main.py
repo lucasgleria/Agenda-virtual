@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     # Inicia o agendador de notificações
     # Para testes, um intervalo menor pode ser usado, ex: 10 segundos
-    scheduler = NotificationScheduler(repository, check_interval=3600)
+    scheduler = NotificationScheduler(repository, check_interval=10)
     scheduler.start()
 
     view = AgendaView(root)

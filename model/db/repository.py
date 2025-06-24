@@ -47,7 +47,18 @@ class AgendaRepository:
                 return tasks
         finally:
             release_db_connection(conn)
-            
+    
+    def get_all_tasks(self):
+        """Retornar todas as tarefas do banco de dados"""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM tasks ORDER BY date DESC;")
+                tasks = cur.fetchall()
+                return tasks
+        finally:
+            release_db_connection(conn)
+
     def add_evento(self, evento_data):
         conn = get_db_connection()
         try:
@@ -73,6 +84,34 @@ class AgendaRepository:
             if conn:
                 conn.rollback()
             return None
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def update_event(self, evento_id, evento_data):
+        """Atualizar um evento existente."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE eventos
+                    SET description = %s, nome = %s, dias_semana = %s
+                    WHERE id = %s;
+                    """,
+                    (
+                        evento_data['description'],
+                        evento_data.get('nome'),
+                        evento_data['dias_semana'],
+                        evento_id
+                    )
+                )
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Erro ao atualizar evento: {e}")
+            if conn:
+                conn.rollback()
+            raise e
         finally:
             if conn:
                 release_db_connection(conn)
@@ -304,19 +343,21 @@ class AgendaRepository:
             release_db_connection(conn)
 
     def get_upcoming_schedules(self):
-        """Busca agendamentos pendentes que ocorrerão no dia seguinte."""
+        """Busca agendamentos pendentes que ocorrerão nas próximas 24 horas."""
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                tomorrow = datetime.now().date() + timedelta(days=1)
+                now = datetime.now()
+                tomorrow_24h = now + timedelta(days=1)
                 
                 query = """
                     SELECT id, description, nome, date FROM tasks
                     WHERE is_agendamento = TRUE
                       AND status = 'pendente'
-                      AND date = %s;
+                      AND date >= %s AND date <= %s
+                    ORDER BY date;
                 """
-                cur.execute(query, (tomorrow,))
+                cur.execute(query, (now.date(), tomorrow_24h.date()))
                 schedules = cur.fetchall()
                 return schedules
         finally:
@@ -344,4 +385,52 @@ class AgendaRepository:
                 return appointments
         finally:
             if conn:
+                release_db_connection(conn)
+
+    def delete_event(self, event_id):
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM eventos WHERE id = %s;", (event_id,))
+                conn.commit()
+        finally:
+            release_db_connection(conn)
+
+    def get_tarefas_by_date(self, date):
+        """Buscar apenas tarefas (não eventos, não agendamentos) para uma data."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM tasks WHERE date = %s AND is_agendamento = FALSE AND is_evento = FALSE ORDER BY id;",
+                    (date,)
+                )
+                return cur.fetchall()
+        finally:
+            release_db_connection(conn)
+    
+    def get_agendamentos_by_date(self, date):
+        """Buscar apenas agendamentos (não eventos, não tarefas) para uma data."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM tasks WHERE date = %s AND is_agendamento = TRUE AND is_evento = FALSE ORDER BY id;",
+                    (date,)
+                )
+                return cur.fetchall()
+        finally:
+            release_db_connection(conn)
+    
+    def get_eventos_by_date(self, date):
+        """Buscar apenas eventos (não agendamentos, não tarefas) para uma data."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM tasks WHERE date = %s AND is_evento = TRUE ORDER BY id;",
+                    (date,)
+                )
+                return cur.fetchall()
+        finally:
                 release_db_connection(conn) 

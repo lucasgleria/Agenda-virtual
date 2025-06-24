@@ -1,0 +1,11 @@
+# Configurações do Banco de Dados PostgreSQL
+AGENDA_DB_HOST=localhost
+AGENDA_DB_PORT=5433
+AGENDA_DB_NAME=agenda_virtual
+AGENDA_DB_USER=postgres
+AGENDA_DB_PASSWORD=admin
+
+# Configurações da Aplicação
+AGENDA_DEBUG=true
+AGENDA_LOG_LEVEL=INFO
+AGENDA_NOTIFICATION_INTERVAL=10 
