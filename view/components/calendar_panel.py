@@ -213,28 +213,57 @@ class CalendarPanel:
             self.reset_inputs()
 
     def handle_export_data(self):
+        """Exportar dados"""
         if self.controller:
-            self.controller.handle_export_data()
+            try:
+                self.controller.handle_export_data()
+                # Feedback visual de sucesso
+                if hasattr(self, 'parent') and hasattr(self.parent, 'notification_panel'):
+                    self.parent.notification_panel.show_success("Dados exportados com sucesso!")
+            except Exception as e:
+                # Feedback visual de erro
+                if hasattr(self, 'parent') and hasattr(self.parent, 'notification_panel'):
+                    self.parent.notification_panel.show_error(f"Erro ao exportar dados: {str(e)}")
+                else:
+                    print(f"Erro ao exportar dados: {str(e)}")
+        else:
+            print("Controller não disponível para exportação")
 
     def handle_create_backup(self):
+        """Criar backup"""
         if self.controller:
-            self.controller.handle_create_backup()
-    
+            try:
+                self.controller.handle_create_backup()
+                # Feedback visual de sucesso
+                if hasattr(self, 'parent') and hasattr(self.parent, 'notification_panel'):
+                    self.parent.notification_panel.show_success("Backup criado com sucesso!")
+            except Exception as e:
+                # Feedback visual de erro
+                if hasattr(self, 'parent') and hasattr(self.parent, 'notification_panel'):
+                    self.parent.notification_panel.show_error(f"Erro ao criar backup: {str(e)}")
+                else:
+                    print(f"Erro ao criar backup: {str(e)}")
+        else:
+            print("Controller não disponível para backup")
+
     def update_date_label(self):
         """Atualizar label da data selecionada"""
-        selected_date = self.get_selected_date()
-        today = datetime.now().strftime('%Y-%m-%d')
-        
-        if selected_date == today:
-            self.date_label.configure(text="Data: Hoje")
-        else:
-            # Formatar data para exibição
-            try:
+        try:
+            selected_date = self.calendar.get_date()
+            today = datetime.now().strftime('%Y-%m-%d')
+            
+            if selected_date == today:
+                date_text = "Data: Hoje"
+            else:
                 date_obj = datetime.strptime(selected_date, '%Y-%m-%d')
-                formatted_date = date_obj.strftime('%d/%m/%Y')
-                self.date_label.configure(text=f"Data: {formatted_date}")
-            except:
-                self.date_label.configure(text=f"Data: {selected_date}")
+                date_text = f"Data: {date_obj.strftime('%d/%m/%Y')}"
+            
+            if hasattr(self, 'date_label'):
+                self.date_label.configure(text=date_text)
+        except Exception as e:
+            print(f"Erro ao atualizar label da data: {str(e)}")
+            if hasattr(self, 'date_label'):
+                self.date_label.configure(text="Data: Erro")
     
     def set_toggle_editor_mode_callback(self, callback):
         """Definir callback para alternar modo editor"""

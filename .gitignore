@@ -7,3 +7,4 @@ services/__pycache__/*
 view/__pycache__/*
 view/components/__pycache__/*
 model/db/__pycache__/*
+docs/*

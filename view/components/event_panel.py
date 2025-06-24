@@ -163,6 +163,13 @@ class EventPanel(ttk.Frame):
                 event_status = "Ativo" if event.ativo else "Inativo"
                 if status_filter != event_status:
                     continue
+            
+            # Filtro por período (implementação básica)
+            if period_filter != "Todos":
+                # Aqui implementaria lógica mais complexa de filtro por período
+                # Por enquanto, apenas verifica se o evento está ativo
+                if period_filter == "Ativo" and not event.ativo:
+                    continue
                 
             # Filtro por busca
             if search_text and search_text not in (event.nome or "").lower():

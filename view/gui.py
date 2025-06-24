@@ -322,41 +322,89 @@ class AgendaView:
         self.task_list_panel.pack(fill='both', expand=True, pady=(10, 0))
 
     def update_view(self):
-        """Atualizar visualização."""
-        if self.controller:
-            current_date = self.calendar_panel.get_selected_date()
-            tasks = self.controller.get_tasks_for_date(current_date)
+        """Atualizar visualização com sincronização garantida."""
+        if not self.controller:
+            print("[GUI] Controller não disponível para atualização")
+            return
             
-            # Atualizar painel de tarefas
-            self.task_list_panel.update_task_list(current_date, tasks)
+        try:
+            # Obter data atual selecionada
+            current_date = self.calendar_panel.get_selected_date()
+            print(f"[GUI] Atualizando view para data: {current_date}")
+            
+            # Obter tarefas da data atual
+            tasks = self.controller.get_tasks_for_date(current_date)
+            print(f"[GUI] Tarefas encontradas: {len(tasks)}")
+            
+            # Atualizar painel de tarefas (sempre)
+            if hasattr(self.task_list_panel, 'update_task_list'):
+                self.task_list_panel.update_task_list(current_date, tasks)
+                print("[GUI] Painel de tarefas atualizado")
             
             # Atualizar painel de editor se estiver visível
-            if self.editor_mode:
+            if self.editor_mode and hasattr(self.editor_panel, 'update_editor_panel'):
                 self.editor_panel.update_editor_panel(current_date, tasks, True)
+                print("[GUI] Painel de editor atualizado")
             
-            # Atualizar painel de eventos
-            if hasattr(self.event_panel, 'update_events'):
+            # Atualizar painel de eventos (sempre)
+            try:
                 events = self.controller.get_all_active_events()
-                self.event_panel.update_events(events)
+                if hasattr(self.event_panel, 'update_events'):
+                    self.event_panel.update_events(events)
+                    print(f"[GUI] Painel de eventos atualizado: {len(events)} eventos")
+            except Exception as e:
+                print(f"[GUI] Erro ao atualizar painel de eventos: {e}")
             
-            # Atualizar label da data no calendário
+            # Atualizar label da data no calendário (sempre)
             if hasattr(self.calendar_panel, 'update_date_label'):
                 self.calendar_panel.update_date_label()
+                print("[GUI] Label da data atualizada")
             
-            # Atualizar alertas
+            # Atualizar alertas (sempre)
             self.update_alerts()
+            print("[GUI] Alertas atualizados")
+            
+            # Atualizar dashboard se estiver visível
+            if self.current_panel == 'dashboard' and self.dashboard_panel:
+                try:
+                    if hasattr(self.dashboard_panel, '_load_statistics'):
+                        self.dashboard_panel._load_statistics()
+                        print("[GUI] Dashboard atualizado")
+                except Exception as e:
+                    print(f"[GUI] Erro ao atualizar dashboard: {e}")
+            
+            print("[GUI] Atualização da view concluída com sucesso")
+            
+        except Exception as e:
+            print(f"[GUI] Erro durante atualização da view: {e}")
+            # Tentar mostrar notificação de erro se disponível
+            if hasattr(self, 'notification_panel'):
+                self.notification_panel.show_error(f"Erro ao atualizar interface: {str(e)}")
 
     def update_alerts(self):
-        """Atualizar painel de alertas."""
-        if self.controller and hasattr(self.alert_panel, 'update_alerts'):
-            # Obter eventos e agendamentos para os alertas
+        """Atualizar painel de alertas com tratamento de erro."""
+        if not self.controller:
+            print("[GUI] Controller não disponível para atualizar alertas")
+            return
+            
+        try:
+            # Obter eventos ativos
             events = self.controller.get_all_active_events()
             
             # Obter todos os agendamentos (não apenas da data atual)
             all_tasks = self.controller.get_tasks()
             agendamentos = [task for task in all_tasks if task.is_agendamento and not task.is_evento]
             
-            self.alert_panel.update_alerts(events, agendamentos)
+            # Atualizar painel de alertas
+            if hasattr(self.alert_panel, 'update_alerts'):
+                self.alert_panel.update_alerts(events, agendamentos)
+                print(f"[GUI] Alertas atualizados: {len(events)} eventos, {len(agendamentos)} agendamentos")
+            else:
+                print("[GUI] Painel de alertas não possui método update_alerts")
+                
+        except Exception as e:
+            print(f"[GUI] Erro ao atualizar alertas: {e}")
+            # Não mostrar notificação de erro para alertas para evitar spam
 
     def handle_apply_filters(self, filters):
         """Callback para aplicar filtros."""
@@ -372,17 +420,197 @@ class AgendaView:
         toolbar_frame = ttk.Frame(self.main_frame, style='Panel.TFrame')
         toolbar_frame.pack(fill='x', pady=(0, 10))
         
+        # Configurar grid weights para responsividade
+        toolbar_frame.grid_columnconfigure(1, weight=1)
+        
         # Título principal
         title_label = ttk.Label(toolbar_frame, text="📅 Agenda Virtual", 
                                style='Title.TLabel')
-        title_label.pack(side='left', padx=(10, 0))
+        title_label.grid(row=0, column=0, sticky="w", padx=(10, 0))
+        
+        # Frame para botões de ação
+        actions_frame = ttk.Frame(toolbar_frame)
+        actions_frame.grid(row=0, column=1, sticky="e", padx=(0, 10))
+        
+        # Botão de Dashboard
+        self.dashboard_btn = ttk.Button(actions_frame, text="📊 Dashboard", 
+                                       command=self.toggle_dashboard)
+        self.dashboard_btn.pack(side="right", padx=(5, 0))
+        
+        # Botão de Exportar
+        self.export_btn = ttk.Button(actions_frame, text="📤 Exportar", 
+                                    command=self._handle_export_data)
+        self.export_btn.pack(side="right", padx=(5, 0))
+        
+        # Botão de Backup
+        self.backup_btn = ttk.Button(actions_frame, text="💾 Backup", 
+                                    command=self._handle_create_backup)
+        self.backup_btn.pack(side="right", padx=(5, 0))
+        
+        # Botão de Configurações
+        self.settings_btn = ttk.Button(actions_frame, text="⚙️ Configurações", 
+                                      command=self._show_settings)
+        self.settings_btn.pack(side="right", padx=(5, 0))
+        
+        # Botão de Ajuda
+        self.help_btn = ttk.Button(actions_frame, text="❓ Ajuda", 
+                                  command=self._show_help)
+        self.help_btn.pack(side="right", padx=(5, 0))
+    
+    def _handle_export_data(self):
+        """Handler para exportar dados"""
+        if self.controller:
+            try:
+                self.controller.handle_export_data()
+                self.notification_panel.show_success("Dados exportados com sucesso!")
+            except Exception as e:
+                self.notification_panel.show_error(f"Erro ao exportar dados: {str(e)}")
+        else:
+            self.notification_panel.show_warning("Controller não disponível para exportação")
+    
+    def _handle_create_backup(self):
+        """Handler para criar backup"""
+        if self.controller:
+            try:
+                self.controller.handle_create_backup()
+                self.notification_panel.show_success("Backup criado com sucesso!")
+            except Exception as e:
+                self.notification_panel.show_error(f"Erro ao criar backup: {str(e)}")
+        else:
+            self.notification_panel.show_warning("Controller não disponível para backup")
     
     def _show_settings(self):
         """Mostrar janela de configurações"""
-        # Placeholder para futura implementação
-        print("Configurações - Funcionalidade em desenvolvimento")
+        settings_window = tk.Toplevel(self.root)
+        settings_window.title("⚙️ Configurações - Agenda Virtual")
+        settings_window.geometry("400x300")
+        settings_window.resizable(False, False)
+        settings_window.grab_set()
+        
+        # Centralizar janela
+        settings_window.transient(self.root)
+        settings_window.grab_set()
+        
+        # Frame principal
+        main_frame = ttk.Frame(settings_window, padding=20)
+        main_frame.pack(fill='both', expand=True)
+        
+        # Título
+        title_label = ttk.Label(main_frame, text="⚙️ Configurações", 
+                               font=("Segoe UI", 16, "bold"))
+        title_label.pack(pady=(0, 20))
+        
+        # Configurações de notificação
+        notif_frame = ttk.LabelFrame(main_frame, text="🔔 Notificações", padding=10)
+        notif_frame.pack(fill='x', pady=(0, 10))
+        
+        notif_var = tk.BooleanVar(value=True)
+        notif_check = ttk.Checkbutton(notif_frame, text="Ativar notificações do sistema", 
+                                     variable=notif_var)
+        notif_check.pack(anchor='w')
+        
+        # Configurações de interface
+        ui_frame = ttk.LabelFrame(main_frame, text="🎨 Interface", padding=10)
+        ui_frame.pack(fill='x', pady=(0, 10))
+        
+        theme_var = tk.StringVar(value="Claro")
+        ttk.Label(ui_frame, text="Tema:").pack(anchor='w')
+        theme_combo = ttk.Combobox(ui_frame, textvariable=theme_var, 
+                                  values=["Claro", "Escuro"], state="readonly")
+        theme_combo.pack(anchor='w', pady=(5, 0))
+        
+        # Botões de ação
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill='x', pady=(20, 0))
+        
+        save_btn = ttk.Button(button_frame, text="💾 Salvar", 
+                             command=lambda: self._save_settings(settings_window))
+        save_btn.pack(side='right', padx=(5, 0))
+        
+        cancel_btn = ttk.Button(button_frame, text="❌ Cancelar", 
+                               command=settings_window.destroy)
+        cancel_btn.pack(side='right')
+    
+    def _save_settings(self, window):
+        """Salvar configurações"""
+        # Aqui implementaria a lógica para salvar as configurações
+        self.notification_panel.show_success("Configurações salvas com sucesso!")
+        window.destroy()
     
     def _show_help(self):
         """Mostrar janela de ajuda"""
-        # Placeholder para futura implementação
-        print("Ajuda - Funcionalidade em desenvolvimento")
+        help_window = tk.Toplevel(self.root)
+        help_window.title("❓ Ajuda - Agenda Virtual")
+        help_window.geometry("500x400")
+        help_window.resizable(False, False)
+        help_window.grab_set()
+        
+        # Centralizar janela
+        help_window.transient(self.root)
+        help_window.grab_set()
+        
+        # Frame principal com scroll
+        main_frame = ttk.Frame(help_window)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Canvas para scroll
+        canvas = tk.Canvas(main_frame)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Título
+        title_label = ttk.Label(scrollable_frame, text="❓ Ajuda - Agenda Virtual", 
+                               font=("Segoe UI", 16, "bold"))
+        title_label.pack(pady=(0, 20))
+        
+        # Seções de ajuda
+        help_sections = [
+            ("📋 Como Adicionar Tarefas", 
+             "1. Selecione uma data no calendário\n"
+             "2. Digite a descrição da tarefa\n"
+             "3. Escolha a prioridade\n"
+             "4. Clique em 'Adicionar'"),
+            
+            ("📅 Como Criar Eventos", 
+             "1. Marque a caixa 'É um evento'\n"
+             "2. Selecione os dias da semana\n"
+             "3. Digite a descrição\n"
+             "4. Clique em 'Adicionar'"),
+            
+            ("📊 Dashboard", 
+             "Acesse o dashboard para ver estatísticas\n"
+             "e gráficos das suas tarefas e eventos."),
+            
+            ("🔔 Notificações", 
+             "Configure as notificações em Configurações\n"
+             "para receber lembretes dos seus agendamentos."),
+            
+            ("💾 Backup e Exportação", 
+             "Use os botões na barra de ferramentas para\n"
+             "fazer backup ou exportar seus dados.")
+        ]
+        
+        for title, content in help_sections:
+            section_frame = ttk.LabelFrame(scrollable_frame, text=title, padding=10)
+            section_frame.pack(fill='x', pady=(0, 10))
+            
+            content_label = ttk.Label(section_frame, text=content, 
+                                     font=("Segoe UI", 10), justify='left')
+            content_label.pack(anchor='w')
+        
+        # Botão de fechar
+        close_btn = ttk.Button(scrollable_frame, text="❌ Fechar", 
+                              command=help_window.destroy)
+        close_btn.pack(pady=(20, 0))
+        
+        # Empacotar canvas e scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")

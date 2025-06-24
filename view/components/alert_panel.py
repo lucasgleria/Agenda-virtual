@@ -60,7 +60,7 @@ class AlertPanel(ttk.Frame):
                  foreground=ColorPalette.TEXT['primary']).pack(side=tk.LEFT)
         self.type_var = tk.StringVar(value="Todos")
         type_combo = ttk.Combobox(type_frame, textvariable=self.type_var, 
-                                 values=["Todos"], 
+                                 values=["Todos", "Agendamento", "Evento", "Tarefa"], 
                                  state="readonly", width=15)
         type_combo.pack(side=tk.LEFT, padx=(5, 0))
         type_combo.bind("<<ComboboxSelected>>", self._apply_filters)
@@ -186,12 +186,17 @@ class AlertPanel(ttk.Frame):
     
     def _apply_filters(self, event=None):
         """Aplicar filtros à lista de agendamentos."""
+        type_filter = self.type_var.get()
         urgency_filter = self.urgency_var.get()
         search_text = self.search_var.get().lower()
         
         self.filtered_alerts = []
         
         for alert in self.alerts:
+            # Filtro por tipo
+            if type_filter != "Todos" and alert['type'] != type_filter:
+                continue
+                
             # Filtro por urgência
             if urgency_filter != "Todas" and alert['urgency'] != urgency_filter:
                 continue
