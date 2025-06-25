@@ -42,7 +42,20 @@ class AgendaRepository:
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM tasks WHERE date = %s;", (date,))
+                # Buscar tarefas normais, agendamentos pendentes e eventos pendentes
+                # Também incluir eventos e agendamentos concluídos APENAS no dia da conclusão
+                cur.execute("""
+                    SELECT t.* FROM tasks t 
+                    WHERE t.date = %s 
+                    AND (
+                        (t.is_evento = FALSE AND t.is_agendamento = FALSE) OR  -- Tarefas normais (sempre visíveis)
+                        (t.is_agendamento = TRUE AND t.status = 'pendente') OR  -- Agendamentos pendentes
+                        (t.is_evento = TRUE AND t.status = 'pendente') OR  -- Eventos pendentes
+                        (t.is_agendamento = TRUE AND t.status = 'concluída' AND t.date = %s) OR  -- Agendamentos concluídos apenas no dia
+                        (t.is_evento = TRUE AND t.status = 'concluída' AND t.date = %s)  -- Eventos concluídos apenas no dia
+                    )
+                    ORDER BY t.id;
+                """, (date, date, date))
                 tasks = cur.fetchall()
                 return tasks
         finally:
@@ -120,7 +133,12 @@ class AgendaRepository:
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM eventos WHERE ativo = TRUE;")
+                # Buscar eventos ativos que não foram encerrados ou que foram encerrados após hoje
+                cur.execute("""
+                    SELECT * FROM eventos 
+                    WHERE ativo = TRUE 
+                    AND (data_encerramento IS NULL OR data_encerramento >= %s);
+                """, (datetime.today().date(),))
                 eventos = cur.fetchall()
                 return eventos
         finally:
@@ -148,7 +166,7 @@ class AgendaRepository:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "DELETE FROM tasks WHERE evento_id = %s AND date > %s;",
+                    "DELETE FROM tasks WHERE evento_id = %s AND date >= %s;",
                     (evento_id, from_date)
                 )
                 conn.commit()
@@ -315,8 +333,14 @@ class AgendaRepository:
                 # Filtro por status
                 status_filter = filters.get('status')
                 if status_filter and status_filter != 'Todos':
-                    query_conditions.append("status = %s")
-                    params.append(status_filter.lower())
+                    if status_filter == 'concluída':
+                        # Para itens concluídos, incluir apenas se for no dia atual
+                        query_conditions.append("(status = %s AND date = %s)")
+                        params.append(status_filter.lower())
+                        params.append(date)
+                    else:
+                        query_conditions.append("status = %s")
+                        params.append(status_filter.lower())
 
                 # Filtro por tipo de tarefa
                 tipo_filter = filters.get('tipo')
@@ -331,8 +355,17 @@ class AgendaRepository:
                 # Constrói a query final
                 if not query_conditions:
                     # Fallback para buscar todas as tarefas do dia se nenhum filtro for válido
-                    base_query = "SELECT * FROM tasks WHERE date = %s;"
-                    params = [date]
+                    base_query = """
+                        SELECT * FROM tasks WHERE date = %s 
+                        AND (
+                            (is_evento = FALSE AND is_agendamento = FALSE) OR
+                            (is_agendamento = TRUE AND status = 'pendente') OR
+                            (is_evento = TRUE AND status = 'pendente') OR
+                            (is_agendamento = TRUE AND status = 'concluída' AND date = %s) OR
+                            (is_evento = TRUE AND status = 'concluída' AND date = %s)
+                        );
+                    """
+                    params = [date, date, date]
                 else:
                     base_query = "SELECT * FROM tasks WHERE " + " AND ".join(query_conditions) + ";"
                 
@@ -410,7 +443,7 @@ class AgendaRepository:
             release_db_connection(conn)
     
     def get_agendamentos_by_date(self, date):
-        """Buscar apenas agendamentos (não eventos, não tarefas) para uma data."""
+        """Buscar agendamentos pendentes e concluídos no dia para uma data."""
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
@@ -423,7 +456,7 @@ class AgendaRepository:
             release_db_connection(conn)
     
     def get_eventos_by_date(self, date):
-        """Buscar apenas eventos (não agendamentos, não tarefas) para uma data."""
+        """Buscar eventos pendentes e concluídos no dia para uma data."""
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
@@ -433,4 +466,124 @@ class AgendaRepository:
                 )
                 return cur.fetchall()
         finally:
-                release_db_connection(conn) 
+            release_db_connection(conn)
+
+    def get_task_by_id(self, task_id):
+        """Busca uma tarefa específica pelo ID."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM tasks WHERE id = %s;", (task_id,))
+                task = cur.fetchone()
+                return task
+        finally:
+            release_db_connection(conn)
+
+    def find_evento_by_description(self, description, nome):
+        """Busca um evento pela descrição e nome."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                if nome:
+                    cur.execute(
+                        "SELECT * FROM eventos WHERE description = %s AND nome = %s LIMIT 1;",
+                        (description, nome)
+                    )
+                else:
+                    cur.execute(
+                        "SELECT * FROM eventos WHERE description = %s AND nome IS NULL LIMIT 1;",
+                        (description,)
+                    )
+                result = cur.fetchone()
+                return result
+        finally:
+            release_db_connection(conn)
+
+    def deactivate_evento_from_date(self, evento_id, from_date):
+        """Desativa um evento a partir de uma data específica."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE eventos SET ativo = FALSE, data_encerramento = %s WHERE id = %s;",
+                    (from_date, evento_id)
+                )
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Erro ao desativar evento a partir da data: {e}")
+            if conn:
+                conn.rollback()
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def delete_future_agendamento_occurrences(self, description, nome, from_date):
+        """Remove futuras ocorrências de um agendamento."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                if nome:
+                    cur.execute(
+                        "DELETE FROM tasks WHERE is_agendamento = TRUE AND description = %s AND nome = %s AND date >= %s;",
+                        (description, nome, from_date)
+                    )
+                else:
+                    cur.execute(
+                        "DELETE FROM tasks WHERE is_agendamento = TRUE AND description = %s AND nome IS NULL AND date >= %s;",
+                        (description, from_date)
+                    )
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Erro ao deletar futuras ocorrências de agendamento: {e}")
+            if conn:
+                conn.rollback()
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def cleanup_old_event_tasks(self):
+        """Limpar tarefas antigas de eventos encerrados."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                # Remover tarefas de eventos que foram encerrados antes de hoje
+                cur.execute("""
+                    DELETE FROM tasks 
+                    WHERE is_evento = TRUE 
+                    AND evento_id IN (
+                        SELECT id FROM eventos 
+                        WHERE ativo = FALSE 
+                        AND data_encerramento < %s
+                    );
+                """, (datetime.today().date(),))
+                deleted_count = cur.rowcount
+                conn.commit()
+                return deleted_count
+        except Exception as e:
+            logging.error(f"Erro ao limpar tarefas antigas de eventos: {e}")
+            if conn:
+                conn.rollback()
+            return 0
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def is_item_completed_today(self, description, nome, date):
+        """Verifica se um item foi concluído no dia especificado."""
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                if nome:
+                    cur.execute(
+                        "SELECT status FROM tasks WHERE description = %s AND nome = %s AND date = %s LIMIT 1;",
+                        (description, nome, date)
+                    )
+                else:
+                    cur.execute(
+                        "SELECT status FROM tasks WHERE description = %s AND nome IS NULL AND date = %s LIMIT 1;",
+                        (description, date)
+                    )
+                result = cur.fetchone()
+                return result[0] == 'concluída' if result else False
+        finally:
+            release_db_connection(conn) 

@@ -138,41 +138,45 @@ class GlobalEditorPanel(ttk.Frame):
             self._create_tarefa_card(tarefa, i)
     
     def _create_tarefa_card(self, tarefa, index):
+        """Criar um card de tarefa que ocupa todo o espaço disponível"""
         card_frame = ttk.Frame(self.tarefas_scrollable_frame)
-        card_frame.pack(fill="x", padx=10, pady=5)
+        card_frame.grid(row=index, column=0, sticky="ew", padx=10, pady=5)
+        card_frame.grid_columnconfigure(0, weight=1)
         card_frame.configure(relief="solid", borderwidth=1)  # Borda visível para debug
         
         # Título
-        title_label = ttk.Label(card_frame, text=tarefa.description, font=("Segoe UI", 12, "bold"))
-        title_label.pack(anchor="w", padx=5, pady=5)
+        title_label = ttk.Label(card_frame, text=tarefa.description, font=("Segoe UI", 12, "bold"), wraplength=400)
+        title_label.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         
         # Nome
         if tarefa.nome:
             nome_label = ttk.Label(card_frame, text=f"👤 {tarefa.nome}", font=("Segoe UI", 10), foreground="gray")
-            nome_label.pack(anchor="w", padx=5)
+            nome_label.grid(row=1, column=0, sticky="w", padx=5)
         
         # Data
         if tarefa.date:
             date_label = ttk.Label(card_frame, text=f"📅 {tarefa.date.strftime('%d/%m/%Y')}", font=("Segoe UI", 10), foreground="gray")
-            date_label.pack(anchor="w", padx=5)
+            date_label.grid(row=2, column=0, sticky="w", padx=5)
         
         # Status
         status = "✅ Concluída" if tarefa.status == "concluída" else "⏳ Pendente"
         status_label = ttk.Label(card_frame, text=status, font=("Segoe UI", 10))
-        status_label.pack(anchor="w", padx=5)
+        status_label.grid(row=3, column=0, sticky="w", padx=5)
         
         # Prioridade
         prioridade = tarefa.priority.value if tarefa.priority else "Normal"
         prioridade_label = ttk.Label(card_frame, text=f"Prioridade: {prioridade}", font=("Segoe UI", 10))
-        prioridade_label.pack(anchor="w", padx=5)
+        prioridade_label.grid(row=4, column=0, sticky="w", padx=5)
         
         # Botões de ação
         actions_frame = ttk.Frame(card_frame)
-        actions_frame.pack(anchor="e", pady=(5, 5), padx=5)
+        actions_frame.grid(row=5, column=0, sticky="ew", pady=(5, 5), padx=5)
+        actions_frame.grid_columnconfigure(2, weight=1)  # Espaço flexível à direita
+        
         edit_btn = ttk.Button(actions_frame, text="✏️ Editar", command=lambda t=tarefa: self._abrir_modal_edicao_tarefa(t))
-        edit_btn.pack(side="left", padx=5)
+        edit_btn.grid(row=0, column=0, padx=(0, 5))
         delete_btn = ttk.Button(actions_frame, text="🗑️ Excluir", command=lambda t=tarefa: self._confirmar_exclusao_tarefa(t))
-        delete_btn.pack(side="left", padx=5)
+        delete_btn.grid(row=0, column=1, padx=(0, 5))
     
     def _refresh_eventos(self):
         """Atualizar lista de eventos com cards editáveis."""
@@ -184,39 +188,42 @@ class GlobalEditorPanel(ttk.Frame):
             self._create_evento_card(evento, i)
     
     def _create_evento_card(self, evento, index):
-        """Cria um card para um objeto Evento."""
+        """Cria um card para um objeto Evento que ocupa todo o espaço disponível."""
         card_frame = ttk.Frame(self.eventos_scrollable_frame)
-        card_frame.pack(fill="x", padx=10, pady=5)
+        card_frame.grid(row=index, column=0, sticky="ew", padx=10, pady=5)
+        card_frame.grid_columnconfigure(0, weight=1)
         card_frame.configure(relief="solid", borderwidth=1)
         
         # Título
-        title_label = ttk.Label(card_frame, text=evento.description, font=("Segoe UI", 12, "bold"))
-        title_label.pack(anchor="w", padx=5, pady=5)
+        title_label = ttk.Label(card_frame, text=evento.description, font=("Segoe UI", 12, "bold"), wraplength=400)
+        title_label.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         
         # Nome
         if evento.nome:
             nome_label = ttk.Label(card_frame, text=f"👤 {evento.nome}", font=("Segoe UI", 10), foreground="gray")
-            nome_label.pack(anchor="w", padx=5)
+            nome_label.grid(row=1, column=0, sticky="w", padx=5)
         
         # Status do evento
         status = "✅ Ativo" if evento.ativo else "❌ Encerrado"
         status_label = ttk.Label(card_frame, text=status, font=("Segoe UI", 10))
-        status_label.pack(anchor="w", padx=5)
+        status_label.grid(row=2, column=0, sticky="w", padx=5)
         
         # Dias do evento
         if hasattr(evento, 'dias_semana') and evento.dias_semana:
             dias_text = ", ".join(evento.dias_semana)
             dias_label = ttk.Label(card_frame, text=f"📅 Dias: {dias_text}", font=("Segoe UI", 10), foreground="gray")
-            dias_label.pack(anchor="w", padx=5)
+            dias_label.grid(row=3, column=0, sticky="w", padx=5)
         
         # Botões de ação
         actions_frame = ttk.Frame(card_frame)
-        actions_frame.pack(anchor="e", pady=(5, 5), padx=5)
+        actions_frame.grid(row=4, column=0, sticky="ew", pady=(5, 5), padx=5)
+        actions_frame.grid_columnconfigure(2, weight=1)  # Espaço flexível à direita
+        
         edit_btn = ttk.Button(actions_frame, text="✏️ Editar", command=lambda e=evento: self._abrir_modal_edicao_evento(e))
-        edit_btn.pack(side="left", padx=5)
+        edit_btn.grid(row=0, column=0, padx=(0, 5))
         # O botão de exclusão agora encerra o evento
         delete_btn = ttk.Button(actions_frame, text="🗑️ Encerrar", command=lambda e=evento: self._confirmar_exclusao_evento(e))
-        delete_btn.pack(side="left", padx=5)
+        delete_btn.grid(row=0, column=1, padx=(0, 5))
     
     def _refresh_agendamentos(self):
         """Atualizar lista de agendamentos com cards editáveis."""
@@ -228,41 +235,45 @@ class GlobalEditorPanel(ttk.Frame):
             self._create_agendamento_card(agendamento, i)
     
     def _create_agendamento_card(self, agendamento, index):
+        """Criar um card de agendamento que ocupa todo o espaço disponível"""
         card_frame = ttk.Frame(self.agendamentos_scrollable_frame)
-        card_frame.pack(fill="x", padx=10, pady=5)
+        card_frame.grid(row=index, column=0, sticky="ew", padx=10, pady=5)
+        card_frame.grid_columnconfigure(0, weight=1)
         card_frame.configure(relief="solid", borderwidth=1)  # Borda visível para debug
         
         # Título
-        title_label = ttk.Label(card_frame, text=agendamento.description, font=("Segoe UI", 12, "bold"))
-        title_label.pack(anchor="w", padx=5, pady=5)
+        title_label = ttk.Label(card_frame, text=agendamento.description, font=("Segoe UI", 12, "bold"), wraplength=400)
+        title_label.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         
         # Nome
         if agendamento.nome:
             nome_label = ttk.Label(card_frame, text=f"👤 {agendamento.nome}", font=("Segoe UI", 10), foreground="gray")
-            nome_label.pack(anchor="w", padx=5)
+            nome_label.grid(row=1, column=0, sticky="w", padx=5)
         
         # Data
         if agendamento.date:
             date_label = ttk.Label(card_frame, text=f"📅 {agendamento.date.strftime('%d/%m/%Y')}", font=("Segoe UI", 10), foreground="gray")
-            date_label.pack(anchor="w", padx=5)
+            date_label.grid(row=2, column=0, sticky="w", padx=5)
         
         # Status
         status = "✅ Concluído" if agendamento.status == "concluída" else "⏳ Pendente"
         status_label = ttk.Label(card_frame, text=status, font=("Segoe UI", 10))
-        status_label.pack(anchor="w", padx=5)
+        status_label.grid(row=3, column=0, sticky="w", padx=5)
         
         # Prioridade
         prioridade = agendamento.priority.value if agendamento.priority else "Normal"
         prioridade_label = ttk.Label(card_frame, text=f"Prioridade: {prioridade}", font=("Segoe UI", 10))
-        prioridade_label.pack(anchor="w", padx=5)
+        prioridade_label.grid(row=4, column=0, sticky="w", padx=5)
         
         # Botões de ação
         actions_frame = ttk.Frame(card_frame)
-        actions_frame.pack(anchor="e", pady=(5, 5), padx=5)
+        actions_frame.grid(row=5, column=0, sticky="ew", pady=(5, 5), padx=5)
+        actions_frame.grid_columnconfigure(2, weight=1)  # Espaço flexível à direita
+        
         edit_btn = ttk.Button(actions_frame, text="✏️ Editar", command=lambda a=agendamento: self._abrir_modal_edicao_agendamento(a))
-        edit_btn.pack(side="left", padx=5)
+        edit_btn.grid(row=0, column=0, padx=(0, 5))
         delete_btn = ttk.Button(actions_frame, text="🗑️ Excluir", command=lambda a=agendamento: self._confirmar_exclusao_agendamento(a))
-        delete_btn.pack(side="left", padx=5)
+        delete_btn.grid(row=0, column=1, padx=(0, 5))
     
     def _filter_tarefas(self):
         """Filtrar tarefas."""

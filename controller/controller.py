@@ -46,8 +46,21 @@ class AgendaController:
 
     def gerar_tarefas_evento(self, evento):
         hoje = datetime.today().date()
+        
+        # Verificar se o evento foi encerrado
+        if hasattr(evento, 'data_encerramento') and evento.data_encerramento:
+            if hoje > evento.data_encerramento:
+                print(f"[DEBUG] Controller: Evento '{evento.description}' foi encerrado em {evento.data_encerramento}, não gerando tarefas")
+                return
+        
         for i in range(90):
             data = hoje + timedelta(days=i)
+            
+            # Verificar se a data não ultrapassa a data de encerramento
+            if hasattr(evento, 'data_encerramento') and evento.data_encerramento:
+                if data > evento.data_encerramento:
+                    break
+            
             dias_pt = {0: 'seg', 1: 'ter', 2: 'qua', 3: 'qui', 4: 'sex', 5: 'sáb', 6: 'dom'}
             if dias_pt[data.weekday()] in evento.dias_semana:
                 task_data = {
@@ -235,9 +248,11 @@ class AgendaController:
         
     def _db_to_evento(self, db_row):
         # Converte tupla do DB para objeto Evento
+        # Colunas: 0=id, 1=description, 2=nome, 3=dias_semana, 4=ativo, 5=data_encerramento, 6=user_id
         evento = Evento(description=db_row[1], nome=db_row[2], dias_semana=db_row[3])
         evento.id = db_row[0]
         evento.ativo = db_row[4]
+        evento.data_encerramento = db_row[5]
         return evento
 
     def update_task_status(self, task_key, done):
@@ -253,13 +268,90 @@ class AgendaController:
         print(f"[DEBUG] Controller: task_id encontrado={task_id}")
         
         if task_id:
+            print(f"[DEBUG] Controller: Atualizando status no repository...")
             self.repository.update_task_status(task_id, status)
             print(f"[DEBUG] Controller: Status atualizado no repository")
+            
+            # Verificar se a atualização foi bem-sucedida
+            print(f"[DEBUG] Controller: Verificando se a atualização foi bem-sucedida...")
+            updated_task = self.repository.get_task_by_id(task_id)
+            if updated_task:
+                print(f"[DEBUG] Controller: Tarefa atualizada - Status: {updated_task[8]}")
+                
+                # Se a tarefa foi marcada como concluída e é um evento ou agendamento
+                if done and (updated_task[5] or updated_task[4]):  # is_evento or is_agendamento
+                    print(f"[DEBUG] Controller: Tarefa concluída é evento/agendamento, removendo futuras ocorrências...")
+                    self._handle_completed_recurring_item(updated_task)
+            else:
+                print(f"[DEBUG] Controller: Não foi possível verificar a tarefa atualizada")
+            
             if self.view is not None:
+                print(f"[DEBUG] Controller: Atualizando view...")
                 self.view.update_view()
                 print(f"[DEBUG] Controller: View atualizada")
         else:
             print(f"[DEBUG] Controller: Tarefa não encontrada no banco!")
+            print(f"[DEBUG] Controller: Tentando buscar tarefas similares...")
+            # Buscar tarefas similares para debug
+            similar_tasks = self.repository.get_tasks_by_date(date)
+            print(f"[DEBUG] Controller: Tarefas encontradas para a data {date}: {len(similar_tasks)}")
+            for i, t in enumerate(similar_tasks):
+                print(f"[DEBUG] Controller: Tarefa {i}: id={t[0]}, desc={t[1]}, nome={t[3]}, status={t[8]}")
+
+    def _handle_completed_recurring_item(self, task):
+        """Lidar com eventos e agendamentos concluídos, removendo futuras ocorrências"""
+        try:
+            task_date = task[7]  # date
+            description = task[1]  # description
+            nome = task[3]  # nome
+            is_evento = task[5]  # is_evento
+            is_agendamento = task[4]  # is_agendamento
+            
+            print(f"[DEBUG] Controller: Lidando com item recorrente concluído")
+            print(f"[DEBUG] Controller: Data: {task_date}, Descrição: {description}, Nome: {nome}")
+            print(f"[DEBUG] Controller: É evento: {is_evento}, É agendamento: {is_agendamento}")
+            
+            # Calcular a data do dia seguinte para remover futuras ocorrências
+            from datetime import timedelta
+            next_day = task_date + timedelta(days=1)
+            
+            if is_evento:
+                # Para eventos, encerrar o evento a partir do dia seguinte
+                print(f"[DEBUG] Controller: Encerrando evento a partir do dia seguinte...")
+                self._encerrar_evento_concluido(description, nome, next_day)
+            elif is_agendamento:
+                # Para agendamentos, remover futuras ocorrências a partir do dia seguinte
+                print(f"[DEBUG] Controller: Removendo futuras ocorrências do agendamento a partir do dia seguinte...")
+                self._remover_futuras_ocorrencias_agendamento(description, nome, next_day)
+                
+        except Exception as e:
+            print(f"[DEBUG] Controller: Erro ao lidar com item recorrente concluído: {e}")
+
+    def _encerrar_evento_concluido(self, description, nome, completion_date):
+        """Encerrar um evento quando uma de suas ocorrências é concluída"""
+        try:
+            # Buscar o evento na tabela de eventos
+            evento = self.repository.find_evento_by_description(description, nome)
+            if evento:
+                print(f"[DEBUG] Controller: Evento encontrado, encerrando...")
+                # Encerrar o evento a partir da data de conclusão
+                self.repository.deactivate_evento_from_date(evento[0], completion_date)
+                # Remover tarefas futuras do evento
+                self.repository.delete_future_event_tasks(evento[0], completion_date)
+                print(f"[DEBUG] Controller: Evento encerrado com sucesso")
+            else:
+                print(f"[DEBUG] Controller: Evento não encontrado na tabela de eventos")
+        except Exception as e:
+            print(f"[DEBUG] Controller: Erro ao encerrar evento: {e}")
+
+    def _remover_futuras_ocorrencias_agendamento(self, description, nome, completion_date):
+        """Remover futuras ocorrências de um agendamento quando concluído"""
+        try:
+            # Remover todas as ocorrências futuras do agendamento
+            self.repository.delete_future_agendamento_occurrences(description, nome, completion_date)
+            print(f"[DEBUG] Controller: Futuras ocorrências do agendamento removidas")
+        except Exception as e:
+            print(f"[DEBUG] Controller: Erro ao remover futuras ocorrências do agendamento: {e}")
 
     def update_task(self, task, original_task=None):
         """Atualizar uma tarefa existente."""
@@ -346,4 +438,14 @@ class AgendaController:
         """Retornar eventos ativos (objetos Evento) para o painel global."""
         eventos_db = self.repository.get_eventos_ativos()
         return [self._db_to_evento(e) for e in eventos_db]
+
+    def cleanup_old_tasks(self):
+        """Limpar tarefas antigas de eventos encerrados."""
+        try:
+            deleted_count = self.repository.cleanup_old_event_tasks()
+            print(f"[DEBUG] Controller: {deleted_count} tarefas antigas de eventos removidas")
+            return deleted_count
+        except Exception as e:
+            print(f"[DEBUG] Controller: Erro ao limpar tarefas antigas: {e}")
+            return 0
 

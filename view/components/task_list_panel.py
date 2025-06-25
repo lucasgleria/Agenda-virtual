@@ -125,9 +125,13 @@ class TaskListPanel(ttk.Frame):
         self.pending_label.pack(side=tk.LEFT)
         
     def _create_cards_view(self):
-        """Criar visualização em cards"""
+        """Criar visualização em cards com layout responsivo"""
         self.cards_frame = ttk.Frame(self.content_frame)
         self.cards_frame.pack(fill="both", expand=True)
+        
+        # Configurar grid weights para responsividade
+        self.cards_frame.grid_columnconfigure(0, weight=1)
+        self.cards_frame.grid_rowconfigure(0, weight=1)
         
         # Canvas e scrollbar para cards
         self.cards_canvas = tk.Canvas(self.cards_frame, 
@@ -136,20 +140,31 @@ class TaskListPanel(ttk.Frame):
         self.cards_scrollbar = ttk.Scrollbar(self.cards_frame, orient="vertical", command=self.cards_canvas.yview)
         self.cards_scrollable_frame = ttk.Frame(self.cards_canvas)
         
+        # Configurar grid weights no frame scrollável
+        self.cards_scrollable_frame.grid_columnconfigure(0, weight=1)
+        
         self.cards_scrollable_frame.bind(
             "<Configure>",
             lambda e: self.cards_canvas.configure(scrollregion=self.cards_canvas.bbox("all"))
         )
         
-        self.cards_canvas.create_window((0, 0), window=self.cards_scrollable_frame, anchor="nw")
+        self.cards_canvas.create_window((0, 0), window=self.cards_scrollable_frame, anchor="nw", width=self.cards_canvas.winfo_width())
         self.cards_canvas.configure(yscrollcommand=self.cards_scrollbar.set)
         
-        # Empacotar canvas e scrollbar
-        self.cards_canvas.pack(fill="both", expand=True)
-        self.cards_scrollbar.pack(side="right", fill="y")
+        # Bind para redimensionar o conteúdo quando o canvas for redimensionado
+        self.cards_canvas.bind("<Configure>", self._on_canvas_configure)
+        
+        # Empacotar canvas e scrollbar usando grid para melhor controle
+        self.cards_canvas.grid(row=0, column=0, sticky="nsew")
+        self.cards_scrollbar.grid(row=0, column=1, sticky="ns")
         
         # Bind mouse wheel
         self.cards_canvas.bind("<MouseWheel>", self._on_mousewheel)
+        
+    def _on_canvas_configure(self, event):
+        """Redimensionar o conteúdo do canvas quando ele for redimensionado"""
+        # Atualizar a largura do frame scrollável para ocupar toda a largura do canvas
+        self.cards_canvas.itemconfig(self.cards_canvas.find_withtag("all")[0], width=event.width)
         
     def _create_list_view(self):
         """Criar visualização em lista (TreeView)"""
@@ -207,7 +222,7 @@ class TaskListPanel(ttk.Frame):
         self.list_frame.pack(fill="both", expand=True)
         
     def _create_task_card(self, task, index):
-        """Criar um card visual para uma tarefa"""
+        """Criar um card visual para uma tarefa que ocupa todo o espaço disponível"""
         # Determinar cores baseadas na prioridade
         if task.priority is None:
             priority_color = PriorityColors.get_color('GERAL', 'main')
@@ -218,8 +233,9 @@ class TaskListPanel(ttk.Frame):
             priority_bg = PriorityColors.get_color(task.priority.value, 'background')
             priority_border = PriorityColors.get_color(task.priority.value, 'border')
         
-        # Status da tarefa
-        is_completed = hasattr(task, 'completed') and task.completed
+        # Status da tarefa - CORRIGIDO: usar 'status' em vez de 'completed'
+        is_completed = getattr(task, 'status', 'pendente') == 'concluída'
+        print(f"[DEBUG] Card creation - Task: {getattr(task, 'description', 'N/A')}, Status: {getattr(task, 'status', 'N/A')}, Is completed: {is_completed}")
         status_color = StatusColors.get_color('completed' if is_completed else 'pending', 'main')
         
         # Criar frame do card com bordas arredondadas e sombra
@@ -230,13 +246,15 @@ class TaskListPanel(ttk.Frame):
                        highlightbackground=priority_border,
                        highlightthickness=1)
         
-        # Configurar grid do card
-        card.grid_columnconfigure(1, weight=1)
+        # Configurar grid do card para ocupar todo o espaço disponível
+        card.grid(row=index, column=0, sticky="ew", padx=5, pady=5)
+        card.grid_columnconfigure(0, weight=1)
         
         # Header do card com prioridade e status
         header_frame = tk.Frame(card, bg=priority_bg, height=30)
-        header_frame.grid(row=0, column=0, columnspan=3, sticky="ew", padx=5, pady=(5, 0))
+        header_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=(5, 0))
         header_frame.grid_propagate(False)
+        header_frame.grid_columnconfigure(1, weight=1)
         
         # Ícone de prioridade
         if task.priority is None:
@@ -248,7 +266,7 @@ class TaskListPanel(ttk.Frame):
         
         priority_label = tk.Label(header_frame, text=priority_icon, 
                                  bg=priority_bg, font=("Segoe UI", 12))
-        priority_label.pack(side=tk.LEFT, padx=(10, 5))
+        priority_label.grid(row=0, column=0, padx=(10, 5))
         
         # Status da tarefa
         status_text = "✅ Concluída" if is_completed else "⏳ Pendente"
@@ -256,12 +274,12 @@ class TaskListPanel(ttk.Frame):
                                bg=priority_bg, 
                                fg=status_color,
                                font=("Segoe UI", 9, "bold"))
-        status_label.pack(side=tk.RIGHT, padx=(0, 10))
+        status_label.grid(row=0, column=2, padx=(0, 10))
         
         # Conteúdo principal do card
         content_frame = tk.Frame(card, bg=ColorPalette.BACKGROUND['card'])
-        content_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
-        content_frame.grid_columnconfigure(1, weight=1)
+        content_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
+        content_frame.grid_columnconfigure(0, weight=1)
         
         # Título/Descrição da tarefa
         title_text = task.nome if task.nome else task.description
@@ -269,8 +287,9 @@ class TaskListPanel(ttk.Frame):
                               bg=ColorPalette.BACKGROUND['card'],
                               fg=ColorPalette.TEXT['primary'] if not is_completed else ColorPalette.TEXT['disabled'],
                               font=("Segoe UI", 12, "bold"),
-                              anchor="w", justify=tk.LEFT)
-        title_label.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 5))
+                              anchor="w", justify=tk.LEFT,
+                              wraplength=400)  # Permitir quebra de linha
+        title_label.grid(row=0, column=0, sticky="ew", pady=(0, 5))
         
         # Descrição (se diferente do nome)
         if task.nome and task.description:
@@ -278,12 +297,14 @@ class TaskListPanel(ttk.Frame):
                                  bg=ColorPalette.BACKGROUND['card'],
                                  fg=ColorPalette.TEXT['secondary'],
                                  font=("Segoe UI", 10),
-                                 anchor="w", justify=tk.LEFT)
-            desc_label.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 5))
+                                 anchor="w", justify=tk.LEFT,
+                                 wraplength=400)  # Permitir quebra de linha
+            desc_label.grid(row=1, column=0, sticky="ew", pady=(0, 5))
         
         # Informações adicionais
         info_frame = tk.Frame(content_frame, bg=ColorPalette.BACKGROUND['card'])
-        info_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+        info_frame.grid(row=2, column=0, sticky="ew", pady=(0, 10))
+        info_frame.grid_columnconfigure(1, weight=1)
         
         # Data
         if task.date:
@@ -292,7 +313,7 @@ class TaskListPanel(ttk.Frame):
                                  bg=ColorPalette.BACKGROUND['card'],
                                  fg=ColorPalette.TEXT['tertiary'],
                                  font=("Segoe UI", 9))
-            date_label.pack(side=tk.LEFT, padx=(0, 15))
+            date_label.grid(row=0, column=0, padx=(0, 15))
         
         # Tipo
         type_text = "📋 Tarefa" if not task.is_evento else "📅 Evento"
@@ -300,11 +321,12 @@ class TaskListPanel(ttk.Frame):
                              bg=ColorPalette.BACKGROUND['card'],
                              fg=ColorPalette.TEXT['tertiary'],
                              font=("Segoe UI", 9))
-        type_label.pack(side=tk.LEFT)
+        type_label.grid(row=0, column=1, sticky="w")
         
         # Botões de ação
         actions_frame = tk.Frame(card, bg=ColorPalette.BACKGROUND['card'])
-        actions_frame.grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 10))
+        actions_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+        actions_frame.grid_columnconfigure(3, weight=1)  # Espaço flexível à direita
         
         # Botão de toggle de conclusão
         toggle_text = "✅ Concluir" if not is_completed else "🔄 Reabrir"
@@ -314,7 +336,7 @@ class TaskListPanel(ttk.Frame):
                               font=("Segoe UI", 9, "bold"),
                               relief="flat",
                               command=lambda: self._toggle_task_completion(task))
-        toggle_btn.pack(side=tk.LEFT, padx=(0, 5))
+        toggle_btn.grid(row=0, column=0, padx=(0, 5))
         
         # Botão de editar
         edit_btn = tk.Button(actions_frame, text="✏️ Editar",
@@ -323,7 +345,7 @@ class TaskListPanel(ttk.Frame):
                             font=("Segoe UI", 9),
                             relief="flat",
                              command=lambda: self._edit_task(task))
-        edit_btn.pack(side=tk.LEFT, padx=(0, 5))
+        edit_btn.grid(row=0, column=1, padx=(0, 5))
         
         # Botão de excluir
         delete_btn = tk.Button(actions_frame, text="🗑️ Excluir",
@@ -332,10 +354,7 @@ class TaskListPanel(ttk.Frame):
                               font=("Segoe UI", 9),
                               relief="flat",
                               command=lambda: self._delete_task(task))
-        delete_btn.pack(side=tk.LEFT)
-        
-        # Configurar espaçamento entre cards usando pack
-        card.pack(fill="x", padx=5, pady=5)
+        delete_btn.grid(row=0, column=2, padx=(0, 5))
         
         return card
         
@@ -363,16 +382,23 @@ class TaskListPanel(ttk.Frame):
         self._update_statistics()
     
     def _update_cards_view(self):
-        """Atualizar visualização em cards"""
+        """Atualizar visualização em cards com layout responsivo"""
         # Limpar cards existentes
         for widget in self.cards_scrollable_frame.winfo_children():
             widget.destroy()
+        
+        # Configurar grid weights no frame scrollável
+        self.cards_scrollable_frame.grid_columnconfigure(0, weight=1)
         
         # Criar cards para cada tarefa
         for i, task in enumerate(self.filtered_tasks):
             card = self._create_task_card(task, i)
             # Adicionar animação de entrada
             self._animate_card_entry(card, i)
+        
+        # Forçar atualização do canvas
+        self.cards_canvas.update_idletasks()
+        self.cards_canvas.configure(scrollregion=self.cards_canvas.bbox("all"))
     
     def _update_list_view(self):
         """Atualizar a lista de tarefas no treeview"""
@@ -421,16 +447,16 @@ class TaskListPanel(ttk.Frame):
                 self.tree.item(item_id, tags=(color,))
     
     def _animate_card_entry(self, card, index):
-        """Animar entrada de um card"""
+        """Animar entrada de um card no layout de grid"""
         # Configurar posição inicial (fora da tela)
-        card.pack_configure(pady=(0, 5))
+        card.grid_configure(pady=(0, 5))
         
         # Animar entrada com delay baseado no índice
         def animate():
             try:
                 # Verificar se o card ainda existe antes de tentar animá-lo
                 if card.winfo_exists():
-                    card.pack_configure(pady=(5, 5))
+                    card.grid_configure(pady=(5, 5))
             except Exception as e:
                 # Silenciar erros de animação quando o widget foi destruído
                 pass
@@ -458,8 +484,11 @@ class TaskListPanel(ttk.Frame):
             try:
                 self.controller.update_task_status(task_key, not current_status)
                 print(f"[DEBUG] Método update_task_status chamado com sucesso")
-                self._update_task_list()
-                print(f"[DEBUG] Lista atualizada")
+                
+                # Recarregar tarefas do banco de dados
+                print(f"[DEBUG] Recarregando tarefas do banco...")
+                self._load_tasks()
+                print(f"[DEBUG] Tarefas recarregadas")
                 
                 # Feedback visual
                 task_name = getattr(task, 'nome', '') or getattr(task, 'description', 'Tarefa')

@@ -13,7 +13,7 @@ class EditorPanel:
         self.task_frame = ttk.Frame(self.frame)
         self.task_frame.pack(fill='both', expand=True)
         
-        # Configurar grid weights
+        # Configurar grid weights para responsividade
         self.task_frame.grid_columnconfigure(0, weight=1)
         self.task_frame.grid_rowconfigure(0, weight=1)
         
@@ -22,15 +22,21 @@ class EditorPanel:
         self.scrollbar = ttk.Scrollbar(self.task_frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
         
+        # Configurar grid weights no frame scrollável
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
+        
         self.scrollable_frame.bind(
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
         
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw", width=self.canvas.winfo_width())
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
-        # Empacotar canvas e scrollbar
+        # Bind para redimensionar o conteúdo quando o canvas for redimensionado
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+        
+        # Empacotar canvas e scrollbar usando grid para melhor controle
         self.canvas.grid(row=0, column=0, sticky="nsew")
         self.scrollbar.grid(row=0, column=1, sticky="ns")
         
@@ -49,6 +55,11 @@ class EditorPanel:
                                     font=("Segoe UI", 11), foreground="gray")
         self.count_label.pack(side="left", padx=(10, 0))
 
+    def _on_canvas_configure(self, event):
+        """Redimensionar o conteúdo do canvas quando ele for redimensionado"""
+        # Atualizar a largura do frame scrollável para ocupar toda a largura do canvas
+        self.canvas.itemconfig(self.canvas.find_withtag("all")[0], width=event.width)
+
     def _on_mousewheel(self, event):
         """Scroll do mouse para o canvas"""
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
@@ -65,18 +76,26 @@ class EditorPanel:
             self.frame.pack_forget()
             return
 
+        # Configurar grid weights no frame scrollável
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
+
         # Atualizar contador
         self.count_label.configure(text=f"({len(tasks)} tarefas)")
         
         # Criar cards para cada tarefa
         for i, task in enumerate(tasks):
             self._create_task_editor_card(task, date, i)
+        
+        # Forçar atualização do canvas
+        self.canvas.update_idletasks()
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _create_task_editor_card(self, task, date, index):
-        """Criar um card de edição para uma tarefa"""
+        """Criar um card de edição para uma tarefa que ocupa todo o espaço disponível"""
         # Frame principal do card
         card_frame = ttk.Frame(self.scrollable_frame, style="EditorCard.TFrame")
-        card_frame.pack(fill="x", padx=10, pady=5)
+        card_frame.grid(row=index, column=0, sticky="ew", padx=10, pady=5)
+        card_frame.grid_columnconfigure(0, weight=1)
         
         # Determinar tipo e ícones
         if getattr(task, 'is_evento', False):
@@ -97,64 +116,68 @@ class EditorPanel:
         
         # Header do card
         header_frame = ttk.Frame(card_frame)
-        header_frame.pack(fill="x", padx=15, pady=(15, 10))
+        header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 10))
+        header_frame.grid_columnconfigure(0, weight=1)
         
         # Informações principais
         info_frame = ttk.Frame(header_frame)
-        info_frame.pack(side="left", fill="x", expand=True)
+        info_frame.grid(row=0, column=0, sticky="ew")
+        info_frame.grid_columnconfigure(0, weight=1)
         
         # Título da tarefa
         title_text = getattr(task, 'description', 'Sem descrição')
         title_label = ttk.Label(info_frame, text=title_text, 
                                font=("Segoe UI", 12, "bold"),
-                               foreground="gray" if is_completed else "black")
-        title_label.pack(anchor="w")
+                               foreground="gray" if is_completed else "black",
+                               wraplength=400)  # Permitir quebra de linha
+        title_label.grid(row=0, column=0, sticky="ew")
         
         # Informações secundárias
         details_frame = ttk.Frame(info_frame)
-        details_frame.pack(anchor="w", pady=(5, 0))
+        details_frame.grid(row=1, column=0, sticky="ew", pady=(5, 0))
+        details_frame.grid_columnconfigure(1, weight=1)
         
         # Tipo
         type_label = ttk.Label(details_frame, text=task_type, 
                               font=("Segoe UI", 10), foreground=type_color)
-        type_label.pack(side="left", padx=(0, 15))
+        type_label.grid(row=0, column=0, padx=(0, 15))
         
         # Status
         status_label = ttk.Label(details_frame, text=f"{status_icon} {status_text}", 
                                 font=("Segoe UI", 10), foreground=status_color)
-        status_label.pack(side="left", padx=(0, 15))
+        status_label.grid(row=0, column=1, padx=(0, 15))
         
         # Data
         date_text = getattr(task, 'date', 'N/A')
         if date_text != 'N/A':
             date_label = ttk.Label(details_frame, text=f"📅 {date_text}", 
                                   font=("Segoe UI", 10), foreground="gray")
-            date_label.pack(side="left")
+            date_label.grid(row=0, column=2)
         
         # Nome (se houver)
         nome = getattr(task, 'nome', None)
         if nome:
             nome_frame = ttk.Frame(info_frame)
-            nome_frame.pack(anchor="w", pady=(5, 0))
+            nome_frame.grid(row=2, column=0, sticky="ew", pady=(5, 0))
             nome_label = ttk.Label(nome_frame, text=f"👤 {nome}", 
                                   font=("Segoe UI", 10), foreground="gray")
-            nome_label.pack(side="left")
+            nome_label.grid(row=0, column=0, sticky="w")
         
         # Ações do card
         actions_frame = ttk.Frame(header_frame)
-        actions_frame.pack(side="right")
+        actions_frame.grid(row=0, column=1, padx=(10, 0))
         
         # Botão de editar
         edit_btn = ttk.Button(actions_frame, text="✏️ Editar", 
                              command=lambda t=task: self._edit_task(date, t),
                              style="Accent.TButton")
-        edit_btn.pack(side="top", pady=(0, 5))
+        edit_btn.grid(row=0, column=0, pady=(0, 5))
         
         # Botão de excluir
         delete_btn = ttk.Button(actions_frame, text="🗑️ Excluir", 
                                command=lambda t=task: self._delete_task(date, t),
                                style="Danger.TButton")
-        delete_btn.pack(side="top")
+        delete_btn.grid(row=1, column=0)
         
         # Aplicar estilo baseado no status
         if is_completed:
@@ -166,16 +189,16 @@ class EditorPanel:
         return card_frame
     
     def _animate_card_entry(self, card, index):
-        """Animar entrada de um card"""
+        """Animar entrada de um card no layout de grid"""
         # Configurar posição inicial
-        card.pack_configure(pady=(0, 5))
+        card.grid_configure(pady=(0, 5))
         
         # Animar entrada com delay
         def animate():
             try:
                 # Verificar se o card ainda existe antes de tentar animá-lo
                 if card.winfo_exists():
-                    card.pack_configure(pady=(5, 5))
+                    card.grid_configure(pady=(5, 5))
             except Exception as e:
                 # Silenciar erros de animação quando o widget foi destruído
                 pass
